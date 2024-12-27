@@ -11,3 +11,8 @@ ElPricesUsageController::ElPricesUsageController() : pulseStorage_(std::make_sha
 {
 
 }
+
+int ElPricesUsageController::getPulses() const
+{
+    return pulseStorage_->getPulseCount();
+}

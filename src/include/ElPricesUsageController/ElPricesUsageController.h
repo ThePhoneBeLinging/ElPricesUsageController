@@ -18,6 +18,7 @@ class ElPricesUsageController
 public:
     ElPricesUsageController();
     ~ElPricesUsageController() = default;
+    int getPulses() const;
 private:
     std::shared_ptr<PulseStorage> pulseStorage_;
     std::unique_ptr<IUsageCollector> usageCollector_;
