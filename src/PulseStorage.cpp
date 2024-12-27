@@ -9,7 +9,7 @@ PulseStorage::PulseStorage()
     pulseTimes_.resize(maxPulsesPerInterval_);
     for (int i = 0; i < maxPulsesPerInterval_; i++)
     {
-        pulseTimes_[i] = std::chrono::system_clock::now();
+        pulseTimes_[i] = std::chrono::system_clock::now() - std::chrono::seconds(secondsInterval_);
     }
 }
 
@@ -24,7 +24,7 @@ int PulseStorage::getPulseCount()
 {
     auto nowWithInterval = std::chrono::system_clock::now();
 
-    auto interval = std::chrono::seconds(60);
+    auto interval = std::chrono::seconds(secondsInterval_);
     nowWithInterval -= interval;
     std::lock_guard lockGuard(mutex_);
     int amountOfPulses = 0;

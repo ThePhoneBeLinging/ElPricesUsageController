@@ -16,6 +16,7 @@ public:
     void storePulse();
     int getPulseCount();
 private:
+    const int secondsInterval_ = 60;
     const int maxPulsesPerInterval_ = 1024;
     int activeIndex_ = 0;
     std::mutex mutex_;
