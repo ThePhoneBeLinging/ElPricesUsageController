@@ -12,6 +12,5 @@ add_library(ElPricesUsageController STATIC
         PulseStorage.cpp
         PulseStorage.h
 )
-
 target_include_directories(ElPricesUsageController PUBLIC include)
 target_link_libraries(ElPricesUsageController PRIVATE Utility)

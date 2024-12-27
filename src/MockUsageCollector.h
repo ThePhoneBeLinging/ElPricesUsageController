@@ -5,16 +5,19 @@
 #ifndef MOCKUSAGECOLLECTOR_H
 #define MOCKUSAGECOLLECTOR_H
 #include "IUsageCollector.h"
+#include "PulseStorage.h"
 
 
 class MockUsageCollector : public IUsageCollector
 {
 public:
-    MockUsageCollector();
+    MockUsageCollector(const std::shared_ptr<PulseStorage>& pulseStorage);
     virtual ~MockUsageCollector();
     void launchPulseThread() override;
-    int getPulseCount() override;
 private:
+    std::shared_ptr<PulseStorage> pulseStorage_;
+    std::thread thread_;
+    std::atomic<bool> keepRunning_;
 };
 
 

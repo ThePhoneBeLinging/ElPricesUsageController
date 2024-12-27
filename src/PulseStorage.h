@@ -4,15 +4,22 @@
 
 #ifndef PULSESTORAGE_H
 #define PULSESTORAGE_H
-
-
+#include <mutex>
+#include <vector>
+#include "Utility/TimeUtil.h"
 
 class PulseStorage
 {
 public:
     PulseStorage();
     ~PulseStorage();
+    void storePulse();
+    int getPulseCount();
 private:
+    const int maxPulsesPerInterval_ = 1024;
+    int activeIndex_ = 0;
+    std::mutex mutex_;
+    std::vector<std::chrono::system_clock::time_point> pulseTimes_;
 
 };
 

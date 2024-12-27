@@ -13,7 +13,6 @@ class IUsageCollector
 public:
     virtual ~IUsageCollector() = default;
     virtual void launchPulseThread() = 0;
-    virtual int getPulseCount() = 0;
 };
 
 #endif //USAGECOLLECTOR_H

@@ -4,24 +4,10 @@
 
 #include "ElPricesUsageController/ElPricesUsageController.h"
 
-ElPricesUsageController::ElPricesUsageController() : keepRunningBool_(true)
-{
-    updatingThread_ = std::thread(&ElPricesUsageController::keepUpdated,this);
-}
+#include "MockUsageCollector.h"
 
-ElPricesUsageController::~ElPricesUsageController()
+ElPricesUsageController::ElPricesUsageController() : pulseStorage_(std::make_shared<PulseStorage>())
+, usageCollector_(std::make_unique<MockUsageCollector>(pulseStorage_))
 {
-    keepRunningBool_ = false;
-    conditionVariable_.notify_all();
-    updatingThread_.join();
-}
 
-void ElPricesUsageController::keepUpdated()
-{
-    std::mutex mutex_;
-    std::unique_lock lock(mutex_);
-    while (keepRunningBool_)
-    {
-        conditionVariable_.wait_for(lock, std::chrono::hours(1));
-    }
 }

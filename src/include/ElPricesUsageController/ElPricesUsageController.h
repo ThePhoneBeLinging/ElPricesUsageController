@@ -9,20 +9,18 @@
 #include <condition_variable>
 #include <thread>
 
+#include "../../IUsageCollector.h"
+#include "../../PulseStorage.h"
 
 
 class ElPricesUsageController
 {
 public:
     ElPricesUsageController();
-    ~ElPricesUsageController();
-
-
+    ~ElPricesUsageController() = default;
 private:
-    void keepUpdated();
-    std::atomic<bool> keepRunningBool_;
-    std::thread updatingThread_;
-    std::condition_variable conditionVariable_;
+    std::shared_ptr<PulseStorage> pulseStorage_;
+    std::unique_ptr<IUsageCollector> usageCollector_;
 };
 
 
