@@ -24,7 +24,7 @@ int PulseStorage::getPulseCount()
 {
     auto nowWithInterval = std::chrono::system_clock::now();
 
-    auto interval = std::chrono::seconds(2);
+    auto interval = std::chrono::seconds(60);
     nowWithInterval -= interval;
     std::lock_guard lockGuard(mutex_);
     int amountOfPulses = 0;
