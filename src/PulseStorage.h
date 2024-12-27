@@ -12,7 +12,7 @@ class PulseStorage
 {
 public:
     PulseStorage();
-    ~PulseStorage();
+    ~PulseStorage() = default;
     void storePulse();
     int getPulseCount();
 private:
