@@ -17,7 +17,7 @@ void PulseStorage::storePulse()
     lastPulseTime_ = now;
 }
 
-double PulseStorage::getTimeBetweenPulses() const
+double PulseStorage::getTimeBetweenPulses()
 {
     std::lock_guard lockGuard(mutex_);
     return timeBetweenLastTwoPulses_;

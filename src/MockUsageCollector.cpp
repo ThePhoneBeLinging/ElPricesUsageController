@@ -3,7 +3,6 @@
 //
 
 #include "MockUsageCollector.h"
-
 #include <random>
 
 MockUsageCollector::MockUsageCollector(const std::shared_ptr<PulseStorage>& pulseStorage) : pulseStorage_(pulseStorage), keepRunning_(true)

@@ -13,7 +13,7 @@ public:
     PulseStorage();
     ~PulseStorage() = default;
     void storePulse();
-    [[nodiscard]] double getTimeBetweenPulses() const;
+    [[nodiscard]] double getTimeBetweenPulses();
 private:
     double timeBetweenLastTwoPulses_;
     std::chrono::high_resolution_clock::time_point lastPulseTime_;

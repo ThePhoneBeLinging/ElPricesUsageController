@@ -4,6 +4,8 @@
 
 #ifndef MOCKUSAGECOLLECTOR_H
 #define MOCKUSAGECOLLECTOR_H
+#include <memory>
+
 #include "IUsageCollector.h"
 #include "PulseStorage.h"
 
