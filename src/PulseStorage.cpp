@@ -4,36 +4,21 @@
 
 #include "PulseStorage.h"
 
-PulseStorage::PulseStorage()
+PulseStorage::PulseStorage() : timeBetweenLastTwoPulses_(0) , lastPulseTime_(std::chrono::system_clock::now())
 {
-    pulseTimes_.resize(maxPulsesPerInterval_);
-    for (int i = 0; i < maxPulsesPerInterval_; i++)
-    {
-        pulseTimes_[i] = std::chrono::system_clock::now() - std::chrono::seconds(secondsInterval_);
-    }
 }
 
 void PulseStorage::storePulse()
 {
+    std::chrono::time_point<std::chrono::high_resolution_clock> now = std::chrono::high_resolution_clock::now();
+    double deltaTime = std::chrono::duration<double>(now - lastPulseTime_).count();
+    timeBetweenLastTwoPulses_ = deltaTime;
     std::lock_guard lockGuard(mutex_);
-    pulseTimes_[activeIndex_++] = std::chrono::system_clock::now();
-    activeIndex_ %= maxPulsesPerInterval_;
+    lastPulseTime_ = now;
 }
 
-int PulseStorage::getPulseCount()
+double PulseStorage::getTimeBetweenPulses() const
 {
-    auto nowWithInterval = std::chrono::system_clock::now();
-
-    auto interval = std::chrono::seconds(secondsInterval_);
-    nowWithInterval -= interval;
     std::lock_guard lockGuard(mutex_);
-    int amountOfPulses = 0;
-    for (int i = 0; i < maxPulsesPerInterval_; i++)
-    {
-        if (nowWithInterval <= pulseTimes_[i])
-        {
-            amountOfPulses++;
-        }
-    }
-    return amountOfPulses;
+    return timeBetweenLastTwoPulses_;
 }

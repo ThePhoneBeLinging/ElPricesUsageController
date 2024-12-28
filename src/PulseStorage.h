@@ -6,7 +6,6 @@
 #define PULSESTORAGE_H
 #include <mutex>
 #include <vector>
-#include "Utility/TimeUtil.h"
 
 class PulseStorage
 {
@@ -14,13 +13,11 @@ public:
     PulseStorage();
     ~PulseStorage() = default;
     void storePulse();
-    int getPulseCount();
+    [[nodiscard]] double getTimeBetweenPulses() const;
 private:
-    const int secondsInterval_ = 60;
-    const int maxPulsesPerInterval_ = 1024;
-    int activeIndex_ = 0;
+    double timeBetweenLastTwoPulses_;
+    std::chrono::high_resolution_clock::time_point lastPulseTime_;
     std::mutex mutex_;
-    std::vector<std::chrono::system_clock::time_point> pulseTimes_;
 
 };
 

@@ -5,7 +5,6 @@
 #ifndef ElPricesUsageController_H
 #define ElPricesUsageController_H
 
-#include <atomic>
 #include <condition_variable>
 #include <thread>
 
@@ -18,7 +17,7 @@ class ElPricesUsageController
 public:
     ElPricesUsageController();
     ~ElPricesUsageController() = default;
-    int getPulses() const;
+    [[nodiscard]] double getTimeBetweenPulses() const;
 private:
     std::shared_ptr<PulseStorage> pulseStorage_;
     std::unique_ptr<IUsageCollector> usageCollector_;

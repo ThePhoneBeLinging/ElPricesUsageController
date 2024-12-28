@@ -12,7 +12,7 @@ ElPricesUsageController::ElPricesUsageController() : pulseStorage_(std::make_sha
 
 }
 
-int ElPricesUsageController::getPulses() const
+double ElPricesUsageController::getTimeBetweenPulses() const
 {
-    return pulseStorage_->getPulseCount();
+    return pulseStorage_->getTimeBetweenPulses();
 }
