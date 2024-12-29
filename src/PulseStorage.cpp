@@ -6,9 +6,10 @@
 
 #include <iostream>
 
-PulseStorage::PulseStorage() : db_(std::make_unique<SQLite::Database>("../../HistoricData/Pulses.db", SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
-                               , memoryDB_(std::make_unique<SQLite::Database>(":memory:",SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
+PulseStorage::PulseStorage() : memoryDB_(std::make_unique<SQLite::Database>(":memory:",SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
 {
+    std::cout << "PulseStorage constructor" << std::endl;
+    db_ = std::make_unique<SQLite::Database>("../../HistoricData/Pulses.db", SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
     // This part of the constructor creates a Table with the same specifications of the file-based DB
     std::string query = "CREATE TABLE Pulses ("
     "\"ID\" INTEGER PRIMARY KEY AUTOINCREMENT,"
