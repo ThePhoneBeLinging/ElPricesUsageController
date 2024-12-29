@@ -4,8 +4,9 @@
 
 #ifndef PULSESTORAGE_H
 #define PULSESTORAGE_H
-#include <mutex>
-#include <vector>
+#include <memory>
+#include "SQLiteCpp/Database.h"
+
 
 class PulseStorage
 {
@@ -15,9 +16,8 @@ public:
     void storePulse();
     [[nodiscard]] double getTimeBetweenPulses();
 private:
-    double timeBetweenLastTwoPulses_;
-    std::chrono::high_resolution_clock::time_point lastPulseTime_;
-    std::mutex mutex_;
+    std::unique_ptr<SQLite::Database> db_;
+    std::unique_ptr<SQLite::Database> memoryDB_;
 
 };
 
