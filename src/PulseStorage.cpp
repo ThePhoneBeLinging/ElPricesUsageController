@@ -25,7 +25,7 @@ void PulseStorage::storePulse()
 {
     try
     {
-        SQLite::Statement insertStatement(*db_,"INSERT INTO Pulses DEFAULT VALUES");
+        SQLite::Statement insertStatement(*memoryDB_,"INSERT INTO Pulses DEFAULT VALUES");
         insertStatement.exec();
     }
     catch (const std::exception& e)
