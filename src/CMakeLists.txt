@@ -14,3 +14,4 @@ add_library(ElPricesUsageController STATIC
 )
 target_include_directories(ElPricesUsageController PUBLIC include)
 target_link_libraries(ElPricesUsageController PRIVATE Utility)
+target_link_libraries(ElPricesUsageController PRIVATE SQLiteCpp)
