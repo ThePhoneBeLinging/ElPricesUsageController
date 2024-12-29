@@ -34,7 +34,16 @@ void PulseStorage::storePulse()
     }
 }
 
-double PulseStorage::getTimeBetweenPulses()
+int PulseStorage::getPulsesLastSeconds(int amountOfSeconds)
 {
-    return 0;
+    try
+    {
+        std::string query = "SELECT COUNT(*) FROM Pulses WHERE TimeStamp >= STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', '-' || " + std::to_string(amountOfSeconds) + " || ' seconds')";
+        return memoryDB_->execAndGet(query).getInt();
+    }
+    catch (const std::exception& e)
+    {
+        std::cout << e.what() << std::endl;
+    }
 }
+

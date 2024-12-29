@@ -14,8 +14,9 @@ public:
     PulseStorage();
     ~PulseStorage() = default;
     void storePulse();
-    [[nodiscard]] double getTimeBetweenPulses();
+    int getPulsesLastSeconds(int amountOfSeconds);
 private:
+
     std::unique_ptr<SQLite::Database> db_;
     std::unique_ptr<SQLite::Database> memoryDB_;
 

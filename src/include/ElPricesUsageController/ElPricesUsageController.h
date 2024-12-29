@@ -17,7 +17,7 @@ class ElPricesUsageController
 public:
     ElPricesUsageController();
     ~ElPricesUsageController() = default;
-    [[nodiscard]] double getTimeBetweenPulses() const;
+    int getAmountOfPulsesBasedOnSeconds(int seconds);
 private:
     std::shared_ptr<PulseStorage> pulseStorage_;
     std::unique_ptr<IUsageCollector> usageCollector_;
