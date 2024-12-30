@@ -6,7 +6,7 @@
 
 #include <iostream>
 
-PulseStorage::PulseStorage() : memoryDB_(std::make_unique<SQLite::Database>(":memory:",SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
+PulseStorage::PulseStorage() : keepRunning_(true),memoryDB_(std::make_unique<SQLite::Database>(":memory:",SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
 {
     std::cout << "PulseStorage constructor" << std::endl;
     db_ = std::make_unique<SQLite::Database>("../../HistoricData/Pulses.db", SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE);
