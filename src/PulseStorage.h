@@ -19,7 +19,7 @@ public:
 private:
     void memoryFlusherThreadFunction();
     void dumpAllPulsesToFile();
-    bool keepRunning_;
+    std::atomic_bool keepRunning_;
     std::condition_variable keepRunningCondition_;
     std::thread memoryFlusherThread_;
     std::mutex databaseMutex_;
