@@ -6,8 +6,10 @@
 
 #include <iostream>
 
+#include "Utility/ConfigController.h"
+
 PulseStorage::PulseStorage() : db_(std::make_unique<SQLite::Database>("../../HistoricData/Pulses.db", SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
-, keepRunning_(true),memoryDB_(std::make_unique<SQLite::Database>(":memory:",SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
+                               , keepRunning_(true),memoryDB_(std::make_unique<SQLite::Database>(":memory:",SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
 {
     std::cout << "PulseStorage constructor" << std::endl;
     // This part of the constructor creates a Table with the same specifications of the file-based DB
@@ -63,7 +65,8 @@ void PulseStorage::memoryFlusherThreadFunction()
     std::unique_lock<std::mutex> lock(mutex);
     while (keepRunning_)
     {
-        keepRunningCondition_.wait_for(lock,std::chrono::hours(1));
+        int secondsToWait = ConfigController::getConfigInt("ElPricesUsageControllerSecondsDumpDelay");
+        keepRunningCondition_.wait_for(lock,std::chrono::seconds(secondsToWait));
         dumpAllPulsesToFile();
     }
 }
@@ -71,11 +74,11 @@ void PulseStorage::memoryFlusherThreadFunction()
 void PulseStorage::dumpAllPulsesToFile()
 {
     std::lock_guard guard(databaseMutex_);
-    // We keep the last 60 seconds of data. If i want to show more later, I will have to purge more data.
-    int amountOfSeconds = 60;
+
+    int amountOfSecondsToKeepInMemory = ConfigController::getConfigInt("ElPricesUsageControllerSecondsToKeepInMemory");
     try
     {
-        std::string query = "SELECT * FROM Pulses WHERE TimeStamp < STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', '-' || " + std::to_string(amountOfSeconds) + " || ' seconds')";
+        std::string query = "SELECT * FROM Pulses WHERE TimeStamp < STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', '-' || " + std::to_string(amountOfSecondsToKeepInMemory) + " || ' seconds')";
         SQLite::Statement queryStmt(*memoryDB_, query);
         while (queryStmt.executeStep())
         {
