@@ -80,6 +80,7 @@ void PulseStorage::dumpAllPulsesToFile()
     {
         std::string query = "SELECT * FROM Pulses WHERE TimeStamp < STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', '-' || " + std::to_string(amountOfSecondsToKeepInMemory) + " || ' seconds')";
         SQLite::Statement queryStmt(*memoryDB_, query);
+        int pulses = 0;
         while (queryStmt.executeStep())
         {
             int id = queryStmt.getColumn(0).getInt();
@@ -92,8 +93,9 @@ void PulseStorage::dumpAllPulsesToFile()
             SQLite::Statement deleteCopiedRow(*memoryDB_, "DELETE FROM Pulses WHERE ID = ?");
             deleteCopiedRow.bind(1, id);
             deleteCopiedRow.exec();
-
+            pulses++;
         }
+        std::cout << "Saved " + std::to_string(pulses) + " to file\n";
     }
     catch (const std::exception& e)
     {
