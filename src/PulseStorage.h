@@ -6,6 +6,8 @@
 #define PULSESTORAGE_H
 #include <condition_variable>
 #include <memory>
+#include <thread>
+
 #include "SQLiteCpp/Database.h"
 
 
