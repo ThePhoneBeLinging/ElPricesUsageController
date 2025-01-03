@@ -95,7 +95,7 @@ void PulseStorage::dumpAllPulsesToFile()
             deleteCopiedRow.exec();
             pulses++;
         }
-        std::cout << "Saved " + std::to_string(pulses) + " to file\n";
+        std::cout << "Saved " + std::to_string(pulses) + " Pulses to file DB\n";
     }
     catch (const std::exception& e)
     {
