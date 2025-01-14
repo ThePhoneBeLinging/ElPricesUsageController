@@ -10,6 +10,7 @@
 
 PulseStorage::PulseStorage() : db_(std::make_unique<SQLite::Database>("../../HistoricData/Pulses.db", SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
                                , keepRunning_(true),memoryDB_(std::make_unique<SQLite::Database>(":memory:",SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
+, lastPing_(std::chrono::high_resolution_clock::now()), wattageLast2Pulses_(0)
 {
     std::cout << "PulseStorage constructor" << std::endl;
     // This part of the constructor creates a Table with the same specifications of the file-based DB
@@ -32,6 +33,10 @@ PulseStorage::~PulseStorage()
 
 void PulseStorage::storePulse()
 {
+    double deltaTime = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - lastPing_).count();
+    wattageLast2Pulses_ = 3.6 / deltaTime;
+    lastPing_ = std::chrono::high_resolution_clock::now();
+
     std::lock_guard guard(databaseMutex_);
     try
     {
@@ -57,6 +62,11 @@ int PulseStorage::getPulsesLastSeconds(int amountOfSeconds)
         std::cout << e.what() << std::endl;
     }
     return -1;
+}
+
+double PulseStorage::getWattage() const
+{
+    return wattageLast2Pulses_;
 }
 
 void PulseStorage::memoryFlusherThreadFunction()

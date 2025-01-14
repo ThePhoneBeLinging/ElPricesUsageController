@@ -16,3 +16,8 @@ int ElPricesUsageController::getAmountOfPulsesBasedOnSeconds(int seconds)
 {
     return pulseStorage_->getPulsesLastSeconds(seconds);
 }
+
+double ElPricesUsageController::getWattage() const
+{
+    return pulseStorage_->getWattage();
+}

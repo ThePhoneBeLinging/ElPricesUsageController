@@ -18,6 +18,7 @@ public:
     ~PulseStorage();
     void storePulse();
     int getPulsesLastSeconds(int amountOfSeconds);
+    double getWattage() const;
 private:
     void memoryFlusherThreadFunction();
     void dumpAllPulsesToFile();
@@ -27,6 +28,8 @@ private:
     std::mutex databaseMutex_;
     std::unique_ptr<SQLite::Database> db_;
     std::unique_ptr<SQLite::Database> memoryDB_;
+    std::chrono::high_resolution_clock::time_point lastPing_;
+    std::atomic<double> wattageLast2Pulses_;
 
 };
 

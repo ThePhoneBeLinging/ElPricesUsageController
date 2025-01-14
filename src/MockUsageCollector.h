@@ -13,12 +13,13 @@
 class MockUsageCollector : public IUsageCollector
 {
 public:
-    MockUsageCollector(const std::shared_ptr<PulseStorage>& pulseStorage);
-    virtual ~MockUsageCollector();
+    explicit MockUsageCollector(const std::shared_ptr<PulseStorage>& pulseStorage);
+    ~MockUsageCollector() override;
     void launchPulseThread() override;
 private:
     std::shared_ptr<PulseStorage> pulseStorage_;
     std::thread thread_;
+    std::condition_variable cv_;
     std::atomic<bool> keepRunning_;
 };
 

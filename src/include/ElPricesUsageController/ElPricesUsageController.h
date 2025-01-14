@@ -18,6 +18,7 @@ public:
     ElPricesUsageController();
     ~ElPricesUsageController() = default;
     int getAmountOfPulsesBasedOnSeconds(int seconds);
+    [[nodiscard]] double getWattage() const;
 private:
     std::shared_ptr<PulseStorage> pulseStorage_;
     std::unique_ptr<IUsageCollector> usageCollector_;
