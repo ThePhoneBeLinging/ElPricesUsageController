@@ -21,7 +21,7 @@ public:
     double getWattage() const;
 private:
     void memoryFlusherThreadFunction();
-    void dumpAllPulsesToFile();
+    void dumpAllPulsesToFile(bool dumpAll);
     std::atomic_bool keepRunning_;
     std::condition_variable keepRunningCondition_;
     std::thread memoryFlusherThread_;

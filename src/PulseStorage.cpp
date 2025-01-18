@@ -77,15 +77,20 @@ void PulseStorage::memoryFlusherThreadFunction()
     {
         int secondsToWait = ConfigController::getConfigInt("ElPricesUsageControllerSecondsDumpDelay");
         keepRunningCondition_.wait_for(lock,std::chrono::seconds(secondsToWait));
-        dumpAllPulsesToFile();
+        dumpAllPulsesToFile(false);
     }
+    dumpAllPulsesToFile(true);
 }
 
-void PulseStorage::dumpAllPulsesToFile()
+void PulseStorage::dumpAllPulsesToFile(bool dumpAll)
 {
     std::lock_guard guard(databaseMutex_);
 
     int amountOfSecondsToKeepInMemory = ConfigController::getConfigInt("ElPricesUsageControllerSecondsToKeepInMemory");
+    if (dumpAll)
+    {
+        amountOfSecondsToKeepInMemory = 0;
+    }
     try
     {
         std::string query = "SELECT * FROM Pulses WHERE TimeStamp < STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', '-' || " + std::to_string(amountOfSecondsToKeepInMemory) + " || ' seconds')";
