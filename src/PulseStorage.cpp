@@ -35,6 +35,10 @@ void PulseStorage::storePulse()
 {
     double deltaTime = std::chrono::duration<double>(std::chrono::high_resolution_clock::now() - lastPing_).count();
     wattageLast2Pulses_ = 3.6 / deltaTime;
+    if (wattageLast2Pulses_ > 1000)
+    {
+        wattageLast2Pulses_ = 0;
+    }
     lastPing_ = std::chrono::high_resolution_clock::now();
 
     std::lock_guard guard(databaseMutex_);
