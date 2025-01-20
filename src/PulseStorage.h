@@ -20,16 +20,20 @@ public:
     int getPulsesLastSeconds(int amountOfSeconds);
     double getWattage() const;
 private:
+    void keepFileDBUpToDate();
     void memoryFlusherThreadFunction();
-    void dumpAllPulsesToFile(bool dumpAll);
+    void cleanUpMemoryPulseDB();
     std::atomic_bool keepRunning_;
     std::condition_variable keepRunningCondition_;
     std::thread memoryFlusherThread_;
-    std::mutex databaseMutex_;
+    std::mutex memoryDatabaseMutex_;
+    std::thread fileDBWriterThread_;
+
     std::unique_ptr<SQLite::Database> db_;
     std::unique_ptr<SQLite::Database> memoryDB_;
     std::chrono::high_resolution_clock::time_point lastPing_;
     std::atomic<double> wattageLast2Pulses_;
+    std::atomic<int> pulsesCurrentHour_;
 
 };
 
