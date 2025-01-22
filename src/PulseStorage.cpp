@@ -79,8 +79,7 @@ double PulseStorage::getWattage() const
 
 void PulseStorage::keepFileDBUpToDate()
 {
-    std::mutex mutex;
-    std::unique_lock<std::mutex> lock(mutex);
+    std::unique_lock<std::mutex> lock(condVarMutex_);
     int lastSavedHour = -1;
     int idToSaveHourUnder = 0;
     while (keepRunning_)
@@ -142,8 +141,7 @@ void PulseStorage::keepFileDBUpToDate()
 
 void PulseStorage::memoryFlusherThreadFunction()
 {
-    std::mutex mutex;
-    std::unique_lock<std::mutex> lock(mutex);
+    std::unique_lock<std::mutex> lock(condVarMutex_);
     while (keepRunning_)
     {
         int secondsToWait = ConfigController::getConfigInt("ElPricesUsageControllerSecondsDumpDelay");

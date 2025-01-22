@@ -25,6 +25,7 @@ private:
     void cleanUpMemoryPulseDB();
     std::atomic_bool keepRunning_;
     std::condition_variable keepRunningCondition_;
+    std::mutex condVarMutex_;
     std::thread memoryFlusherThread_;
     std::mutex memoryDatabaseMutex_;
     std::thread fileDBWriterThread_;
