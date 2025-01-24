@@ -8,6 +8,7 @@
 #include <memory>
 #include <thread>
 
+#include "ElPricesUsageController/UsageDay.h"
 #include "SQLiteCpp/Database.h"
 
 
@@ -19,6 +20,7 @@ public:
     void storePulse();
     int getPulsesLastSeconds(int amountOfSeconds);
     double getWattage() const;
+    std::vector<std::shared_ptr<UsageDay>> getUsageDays() const;
 private:
     void keepFileDBUpToDate();
     void memoryFlusherThreadFunction();

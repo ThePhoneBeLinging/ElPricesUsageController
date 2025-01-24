@@ -77,6 +77,41 @@ double PulseStorage::getWattage() const
     return wattageLast2Pulses_;
 }
 
+std::vector<std::shared_ptr<UsageDay>> PulseStorage::getUsageDays() const
+{
+    try
+    {
+        std::vector<std::shared_ptr<UsageDay>> usageDays;
+        SQLite::Statement selectUsageDays(*db_,"SELECT * FROM PulseDates");
+        while (selectUsageDays.executeStep())
+        {
+            int id = selectUsageDays.getColumn(0).getInt();
+            int year = selectUsageDays.getColumn(1).getInt();
+            int month = selectUsageDays.getColumn(2).getInt();
+            int day = selectUsageDays.getColumn(3).getInt();
+            std::string usagedayString = std::format("%d.%d.%d",year,month,day);
+            auto usageDay = std::make_shared<UsageDay>(usagedayString);
+
+            SQLite::Statement selectPulseHours(*db_,"SELECT * FROM PulseHours WHERE PulseDateID == ?");
+            selectPulseHours.bind(1,id);
+
+            while (selectPulseHours.executeStep())
+            {
+                int hour = selectPulseHours.getColumn(1);
+                int pulses = selectPulseHours.getColumn(2);
+                usageDay->addHour(hour,pulses);
+            }
+            usageDays.push_back(usageDay);
+        }
+        return usageDays;
+    }
+    catch (const std::exception& exception)
+    {
+        std::cout << "GetUsageDays " << exception.what() << std::endl;
+    }
+    return {};
+}
+
 void PulseStorage::keepFileDBUpToDate()
 {
     std::unique_lock<std::mutex> lock(condVarMutex_);

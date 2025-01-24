@@ -11,6 +11,7 @@ add_library(ElPricesUsageController STATIC
         MockUsageCollector.h
         PulseStorage.cpp
         PulseStorage.h
+        UsageDay.cpp
 )
 target_include_directories(ElPricesUsageController PUBLIC include)
 target_link_libraries(ElPricesUsageController PRIVATE Utility)
