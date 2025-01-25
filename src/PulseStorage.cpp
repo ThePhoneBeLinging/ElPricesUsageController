@@ -89,7 +89,7 @@ std::vector<std::shared_ptr<UsageDay>> PulseStorage::getUsageDays() const
             int year = selectUsageDays.getColumn(1).getInt();
             int month = selectUsageDays.getColumn(2).getInt();
             int day = selectUsageDays.getColumn(3).getInt();
-            std::string usagedayString = std::format("%d.%d.%d",year,month,day);
+            std::string usagedayString = std::format("{}-{}-{}",year,month,day);
             auto usageDay = std::make_shared<UsageDay>(usagedayString);
 
             SQLite::Statement selectPulseHours(*db_,"SELECT * FROM PulseHours WHERE PulseDateID == ?");
