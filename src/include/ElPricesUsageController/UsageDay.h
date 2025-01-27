@@ -4,6 +4,7 @@
 
 #ifndef USAGEDAY_H
 #define USAGEDAY_H
+#include <string>
 #include <utility>
 #include <vector>
 

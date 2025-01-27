@@ -4,6 +4,8 @@
 
 #include "ElPricesUsageController/UsageDay.h"
 
+#include <string>
+
 UsageDay::UsageDay(std::string dateString) : dateString_(std::move(dateString))
 {
     usageHours_.resize(24);
