@@ -6,6 +6,7 @@
 #include <fmt/format.h>
 #include <iostream>
 #include "Utility/ConfigController.h"
+#include "Utility/DebugController.h"
 #include "Utility/TimeUtil.h"
 
 PulseStorage::PulseStorage() : db_(std::make_unique<SQLite::Database>("../../HistoricData/Pulses.db", SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
@@ -66,7 +67,8 @@ int PulseStorage::getPulsesLastSeconds(int amountOfSeconds)
     }
     catch (const std::exception& e)
     {
-        std::cout << e.what() << std::endl;
+        std::string debugText = e.what();
+        DebugController::debugWrite("getPulsesLastSeconds: " + debugText);
     }
     return -1;
 }
@@ -106,7 +108,8 @@ std::vector<std::shared_ptr<UsageDay>> PulseStorage::getUsageDays() const
     }
     catch (const std::exception& exception)
     {
-        std::cout << "GetUsageDays " << exception.what() << std::endl;
+        std::string debugText = exception.what();
+        DebugController::debugWrite("getUsageDays: " + debugText);
     }
     return {};
 }
@@ -166,7 +169,8 @@ void PulseStorage::keepFileDBUpToDate()
         }
         catch (const std::exception& e)
         {
-            std::cout << "KEepFileDBUpToDate(): " << e.what() << std::endl;
+            std::string debugText = e.what();
+            DebugController::debugWrite("KeepFileDBUpToDate " + debugText);
         }
 
         lastSavedHour = now.tm_hour;
@@ -203,12 +207,12 @@ void PulseStorage::cleanUpMemoryPulseDB()
             deleteCopiedRow.exec();
             pulses++;
         }
-
-        std::cout << "Deleted " + std::to_string(pulses) + " Pulses from memory DB\n";
+        DebugController::debugWrite("Deleted " + std::to_string(pulses) + " Pulses from memory DB");
     }
     catch (const std::exception& e)
     {
-        std::cout << e.what() << std::endl;
+        std::string debugText = e.what();
+        DebugController::debugWrite("CleanUpMemoryPulseDB(): " + debugText);
     }
 }
 
