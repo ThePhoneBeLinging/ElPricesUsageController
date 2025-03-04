@@ -159,9 +159,10 @@ void PulseStorage::keepFileDBUpToDate()
             {
                 int pulses = selectStatement.getColumn(0).getInt();
 
-                pulsesCurrentHour_ += pulses;
+                pulses += pulsesCurrentHour_;
+                pulsesCurrentHour_ = 0;
                 SQLite::Statement updatePulsesCurrentHourStatement(*db_,"UPDATE PulseHours SET Pulses = ? WHERE PulseDateID == ? AND Hour == ?");
-                updatePulsesCurrentHourStatement.bind(1,pulsesCurrentHour_);
+                updatePulsesCurrentHourStatement.bind(1,pulses);
                 updatePulsesCurrentHourStatement.bind(2,idToSaveHourUnder);
                 updatePulsesCurrentHourStatement.bind(3,now.tm_hour);
                 updatePulsesCurrentHourStatement.exec();
