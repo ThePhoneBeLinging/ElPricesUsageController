@@ -32,8 +32,8 @@ private:
     std::mutex memoryDatabaseMutex_;
     std::thread fileDBWriterThread_;
 
-    std::unique_ptr<SQLite::Database> db_;
-    std::unique_ptr<SQLite::Database> memoryDB_;
+    std::shared_ptr<SQLite::Database> db_;
+    std::shared_ptr<SQLite::Database> memoryDB_;
     std::chrono::high_resolution_clock::time_point lastPing_;
     std::atomic<double> wattageLast2Pulses_;
     std::atomic<int> pulsesCurrentHour_;

@@ -5,6 +5,8 @@
 #include "PulseStorage.h"
 #include <fmt/format.h>
 #include <iostream>
+
+#include "../../DatabaseAccessController/src/include/DatabaseAccessController/DatabaseAccessController.h"
 #include "Utility/ConfigController.h"
 #include "Utility/DebugController.h"
 #include "Utility/TimeUtil.h"
@@ -14,7 +16,9 @@ PulseStorage::PulseStorage() : db_(std::make_unique<SQLite::Database>("../../His
                                , lastPing_(std::chrono::high_resolution_clock::now()), wattageLast2Pulses_(0)
 {
     std::cout << "PulseStorage constructor" << std::endl;
-    // This part of the constructor creates a Table with the same specifications of the file-based DB
+    DatabaseAccessController::addDatabase(db_,"PULSEDB");
+    DatabaseAccessController::addDatabase(memoryDB_, "MEMORYPULSEDB");
+
     std::string query = "CREATE TABLE Pulses ("
     "\"ID\" INTEGER PRIMARY KEY AUTOINCREMENT,"
     "\"TimeStamp\" DATETIME NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW'))"
@@ -45,7 +49,7 @@ void PulseStorage::storePulse()
     lastPing_ = std::chrono::high_resolution_clock::now();
     pulsesCurrentHour_ += 1;
 
-    std::lock_guard guard(memoryDatabaseMutex_);
+    int key = DatabaseAccessController::lockDatabase("MEMORYPULSEDB");
     try
     {
         SQLite::Statement insertStatement(*memoryDB_,"INSERT INTO Pulses DEFAULT VALUES");
@@ -55,21 +59,27 @@ void PulseStorage::storePulse()
     {
         std::cout << e.what() << std::endl;
     }
+    DatabaseAccessController::unlockDatabase("MEMORYPULSEDB",key);
 }
 
 int PulseStorage::getPulsesLastSeconds(int amountOfSeconds)
 {
-    std::lock_guard guard(memoryDatabaseMutex_);
+    int key = DatabaseAccessController::lockDatabase("MEMORYPULSEDB");
+
     try
     {
         std::string query = "SELECT COUNT(*) FROM Pulses WHERE TimeStamp >= STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', '-' || " + std::to_string(amountOfSeconds) + " || ' seconds')";
-        return memoryDB_->execAndGet(query).getInt();
+        int result = memoryDB_->execAndGet(query).getInt();
+        DatabaseAccessController::unlockDatabase("MEMORYPULSEDB",key);
+        return result;
     }
     catch (const std::exception& e)
     {
         std::string debugText = e.what();
         DebugController::debugWrite("getPulsesLastSeconds: " + debugText);
     }
+    DatabaseAccessController::unlockDatabase("MEMORYPULSEDB",key);
+
     return -1;
 }
 
@@ -80,6 +90,8 @@ double PulseStorage::getWattage() const
 
 std::vector<std::shared_ptr<UsageDay>> PulseStorage::getUsageDays() const
 {
+    int key = DatabaseAccessController::lockDatabase("PULSEDB");
+
     try
     {
         std::vector<std::shared_ptr<UsageDay>> usageDays;
@@ -104,6 +116,7 @@ std::vector<std::shared_ptr<UsageDay>> PulseStorage::getUsageDays() const
             }
             usageDays.push_back(usageDay);
         }
+        DatabaseAccessController::unlockDatabase("PULSEDB",key);
         return usageDays;
     }
     catch (const std::exception& exception)
@@ -111,6 +124,7 @@ std::vector<std::shared_ptr<UsageDay>> PulseStorage::getUsageDays() const
         std::string debugText = exception.what();
         DebugController::debugWrite("getUsageDays: " + debugText);
     }
+    DatabaseAccessController::unlockDatabase("PULSEDB",key);
     return {};
 }
 
@@ -127,7 +141,7 @@ void PulseStorage::keepFileDBUpToDate()
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
         }
-
+        int key = DatabaseAccessController::lockDatabase("PULSEDB");
         if (lastSavedHour == 23 || lastSavedHour == -1)
         {
             SQLite::Statement insertDate(*db_,"INSERT OR IGNORE INTO PulseDates(Year,Month,Day) VALUES(?,?,?)");
@@ -173,7 +187,7 @@ void PulseStorage::keepFileDBUpToDate()
             std::string debugText = e.what();
             DebugController::debugWrite("KeepFileDBUpToDate " + debugText);
         }
-
+        DatabaseAccessController::unlockDatabase("PULSEDB",key);
         lastSavedHour = now.tm_hour;
     }
 }
@@ -191,7 +205,7 @@ void PulseStorage::memoryFlusherThreadFunction()
 
 void PulseStorage::cleanUpMemoryPulseDB()
 {
-    std::lock_guard guard(memoryDatabaseMutex_);
+        int key = DatabaseAccessController::lockDatabase("MEMORYPULSEDB");
     int amountOfSecondsToKeepInMemory = ConfigController::getConfigInt("ElPricesUsageControllerSecondsToKeepInMemory");
     try
     {
@@ -215,5 +229,6 @@ void PulseStorage::cleanUpMemoryPulseDB()
         std::string debugText = e.what();
         DebugController::debugWrite("CleanUpMemoryPulseDB(): " + debugText);
     }
+    DatabaseAccessController::unlockDatabase("MEMORYPULSEDB",key);
 }
 
