@@ -195,7 +195,10 @@ void PulseStorage::keepFileDBUpToDate()
                 updatePulsesCurrentHourStatement.bind(3,now.tm_hour);
                 updatePulsesCurrentHourStatement.exec();
             }
-            pulsesCurrentHour_ = 0;
+            if (not firstRun)
+            {
+                pulsesCurrentHour_ = 0;
+            }
         }
         catch (const std::exception& e)
         {
