@@ -22,6 +22,11 @@ double ElPricesUsageController::getWattage() const
     return pulseStorage_->getWattage();
 }
 
+int ElPricesUsageController::getPulsesLastHour() const
+{
+    return pulseStorage_->getPulsesLastHour();
+}
+
 std::vector<std::shared_ptr<UsageDay>> ElPricesUsageController::getUsageDays() const
 {
     return pulseStorage_->getUsageDays();

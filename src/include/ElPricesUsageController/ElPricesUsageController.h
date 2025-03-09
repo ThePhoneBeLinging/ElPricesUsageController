@@ -19,6 +19,7 @@ public:
     ~ElPricesUsageController() = default;
     int getAmountOfPulsesBasedOnSeconds(int seconds);
     [[nodiscard]] double getWattage() const;
+    [[nodiscard]] int getPulsesLastHour() const;
     std::vector<std::shared_ptr<UsageDay>> getUsageDays() const;
 private:
     std::shared_ptr<PulseStorage> pulseStorage_;
