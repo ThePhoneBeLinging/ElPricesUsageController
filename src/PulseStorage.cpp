@@ -88,6 +88,11 @@ double PulseStorage::getWattage() const
     return wattageLast2Pulses_;
 }
 
+int PulseStorage::getPulsesLastHour()
+{
+    return pulsesCurrentHour_;
+}
+
 std::vector<std::shared_ptr<UsageDay>> PulseStorage::getUsageDays() const
 {
     int key = DatabaseAccessController::lockDatabase("PULSEDB");
@@ -133,9 +138,13 @@ void PulseStorage::keepFileDBUpToDate()
     std::unique_lock<std::mutex> lock(condVarMutex_);
     int lastSavedHour = -1;
     int idToSaveHourUnder = 0;
+    bool firstRun = true;
     while (keepRunning_)
     {
-        keepRunningCondition_.wait_for(lock,std::chrono::seconds(TimeUtil::secondsToNextHour()));
+        if (not firstRun)
+        {
+            keepRunningCondition_.wait_for(lock,std::chrono::seconds(TimeUtil::secondsToNextHour()));
+        }
         auto now = TimeUtil::getCurrentTime();
         if (lastSavedHour == now.tm_hour)
         {
@@ -172,15 +181,21 @@ void PulseStorage::keepFileDBUpToDate()
             while (selectStatement.executeStep())
             {
                 int pulses = selectStatement.getColumn(0).getInt();
-
-                pulses += pulsesCurrentHour_;
-                pulsesCurrentHour_ = 0;
+                if (firstRun)
+                {
+                    pulsesCurrentHour_ = pulses;
+                }
+                else
+                {
+                    pulsesCurrentHour_ += pulses;
+                }
                 SQLite::Statement updatePulsesCurrentHourStatement(*db_,"UPDATE PulseHours SET Pulses = ? WHERE PulseDateID == ? AND Hour == ?");
-                updatePulsesCurrentHourStatement.bind(1,pulses);
+                updatePulsesCurrentHourStatement.bind(1,pulsesCurrentHour_);
                 updatePulsesCurrentHourStatement.bind(2,idToSaveHourUnder);
                 updatePulsesCurrentHourStatement.bind(3,now.tm_hour);
                 updatePulsesCurrentHourStatement.exec();
             }
+            pulsesCurrentHour_ = 0;
         }
         catch (const std::exception& e)
         {
@@ -189,6 +204,7 @@ void PulseStorage::keepFileDBUpToDate()
         }
         DatabaseAccessController::unlockDatabase("PULSEDB",key);
         lastSavedHour = now.tm_hour;
+        firstRun = false;
     }
 }
 

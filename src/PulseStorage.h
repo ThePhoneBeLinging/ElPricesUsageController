@@ -20,6 +20,7 @@ public:
     void storePulse();
     int getPulsesLastSeconds(int amountOfSeconds);
     double getWattage() const;
+    int getPulsesLastHour();
     std::vector<std::shared_ptr<UsageDay>> getUsageDays() const;
 private:
     void keepFileDBUpToDate();
