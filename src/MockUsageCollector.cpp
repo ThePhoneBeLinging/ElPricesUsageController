@@ -33,7 +33,7 @@ void MockUsageCollector::launchPulseThread()
     std::unique_lock lock(mutex);
     while (keepRunning_)
     {
-        if (ConfigController::getConfigBool("RunningOnPI"))
+        if (not ConfigController::getConfigBool("RunningOnPI"))
         {
             pulseStorage_->storePulse();
         }
