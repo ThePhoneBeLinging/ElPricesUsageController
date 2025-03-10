@@ -10,7 +10,6 @@
 ElPricesUsageController::ElPricesUsageController() : pulseStorage_(std::make_shared<PulseStorage>())
                                                      , usageCollector_(std::make_unique<UsageCollector>(pulseStorage_))
 {
-    new MockUsageCollector(pulseStorage_);
 }
 
 int ElPricesUsageController::getAmountOfPulsesBasedOnSeconds(int seconds)
