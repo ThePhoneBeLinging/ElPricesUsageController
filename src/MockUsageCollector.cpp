@@ -4,7 +4,7 @@
 
 #include "MockUsageCollector.h"
 #include <random>
-
+#include <gpiod.h>
 #include "Utility/ConfigController.h"
 
 MockUsageCollector::MockUsageCollector(const std::shared_ptr<PulseStorage>& pulseStorage) : pulseStorage_(pulseStorage), keepRunning_(true)
@@ -21,6 +21,11 @@ MockUsageCollector::~MockUsageCollector()
 
 void MockUsageCollector::launchPulseThread()
 {
+    std::string chipPath;
+    //chipPath = ConfigController::getConfigString("ChipName");
+    chipPath = "gpiochip4";
+    gpiod_chip *chip = gpiod_chip_open_by_name(chipPath.c_str());
+    gpiod_line *out_line = gpiod_chip_get_line(chip, ConfigController::getConfigInt("OutputPinForTest"));
     std::random_device rd;
     std::mt19937 eng(rd());
     std::uniform_int_distribution<int> dist(1500, 15000);
@@ -28,7 +33,19 @@ void MockUsageCollector::launchPulseThread()
     std::unique_lock lock(mutex);
     while (keepRunning_)
     {
-        pulseStorage_->storePulse();
+        if (ConfigController::getConfigBool("RunningOnPi"))
+        {
+            pulseStorage_->storePulse();
+        }
+        else
+        {
+            gpiod_line_set_value(out_line,0);
+        }
         cv_.wait_for(lock,std::chrono::milliseconds(dist(eng)));
+        if (ConfigController::getConfigBool("RunningOnPi"))
+        {
+            gpiod_line_set_value(out_line,1);
+            std::this_thread::sleep_for(std::chrono::milliseconds(ConfigController::getConfigInt("RunningOnPi")));
+        }
     }
 }
