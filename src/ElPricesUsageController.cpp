@@ -6,10 +6,18 @@
 
 #include "MockUsageCollector.h"
 #include "UsageCollector.h"
+#include "Utility/ConfigController.h"
 
 ElPricesUsageController::ElPricesUsageController() : pulseStorage_(std::make_shared<PulseStorage>())
-                                                     , usageCollector_(std::make_unique<UsageCollector>(pulseStorage_))
 {
+    if (ConfigController::getConfigBool("RunningOnPI"))
+    {
+        usageCollector_ = std::make_unique<UsageCollector>(pulseStorage_);
+    }
+    else
+    {
+        usageCollector_ = std::make_unique<MockUsageCollector>(pulseStorage_);
+    }
 }
 
 int ElPricesUsageController::getAmountOfPulsesBasedOnSeconds(int seconds)
