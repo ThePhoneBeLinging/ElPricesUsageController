@@ -28,6 +28,7 @@ void UsageCollector::launchPulseThread()
     chipPath = "gpiochip4";
     gpiod_chip *chip = gpiod_chip_open_by_name(chipPath.c_str());
     gpiod_line *out_line = gpiod_chip_get_line(chip, ConfigController::getConfigInt("OutputPinForTest"));
+    gpiod_line_set_value(out_line,1);
     gpiod_line *in_line = gpiod_chip_get_line(chip, ConfigController::getConfigInt("InputPin"));
     bool pulseActive = false;
     while (keepRunning_)
