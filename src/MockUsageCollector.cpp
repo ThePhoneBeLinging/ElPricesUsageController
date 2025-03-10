@@ -33,7 +33,7 @@ void MockUsageCollector::launchPulseThread()
     std::unique_lock lock(mutex);
     while (keepRunning_)
     {
-        if (ConfigController::getConfigBool("RunningOnPi"))
+        if (ConfigController::getConfigBool("RunningOnPI"))
         {
             pulseStorage_->storePulse();
         }
@@ -42,7 +42,7 @@ void MockUsageCollector::launchPulseThread()
             gpiod_line_set_value(out_line,0);
         }
         cv_.wait_for(lock,std::chrono::milliseconds(dist(eng)));
-        if (ConfigController::getConfigBool("RunningOnPi"))
+        if (ConfigController::getConfigBool("RunningOnPI"))
         {
             gpiod_line_set_value(out_line,1);
             std::this_thread::sleep_for(std::chrono::milliseconds(ConfigController::getConfigInt("RunningOnPi")));
