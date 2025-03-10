@@ -5,6 +5,8 @@
 #include "MockUsageCollector.h"
 #include <random>
 #include <gpiod.h>
+#include <iostream>
+
 #include "Utility/ConfigController.h"
 
 MockUsageCollector::MockUsageCollector(const std::shared_ptr<PulseStorage>& pulseStorage) : pulseStorage_(pulseStorage), keepRunning_(true)
@@ -40,6 +42,7 @@ void MockUsageCollector::launchPulseThread()
         }
         else
         {
+            std::cout << "low" << std::endl;
             gpiod_line_set_value(out_line,0);
         }
 
@@ -47,6 +50,7 @@ void MockUsageCollector::launchPulseThread()
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(100));
             gpiod_line_set_value(out_line,1);
+            std::cout << "HIGH" << std::endl;
             std::this_thread::sleep_for(std::chrono::milliseconds(ConfigController::getConfigInt("MockPulseLengthInMS")));
         }
     }
