@@ -31,7 +31,6 @@ void UsageCollector::launchPulseThread()
     gpiod_chip *chip = gpiod_chip_open_by_name(chipPath.c_str());
     if (!chip) {
         std::cerr << "Failed to open GPIO chip\n";
-        return 1;
     }
 
     // Set up output line
@@ -39,7 +38,6 @@ void UsageCollector::launchPulseThread()
     if (!out_line || gpiod_line_request_output(out_line, "example", 0) < 0) {
         std::cerr << "Failed to request output line\n";
         gpiod_chip_close(chip);
-        return 1;
     }
     gpiod_line_set_value(out_line,1);
 
@@ -48,7 +46,6 @@ void UsageCollector::launchPulseThread()
     if (!in_line || gpiod_line_request_input(in_line, "example") < 0) {
         std::cerr << "Failed to request input line\n";
         gpiod_chip_close(chip);
-        return 1;
     }
 
     bool pulseActive = false;
