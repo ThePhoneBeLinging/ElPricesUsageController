@@ -45,7 +45,7 @@ void MockUsageCollector::launchPulseThread()
         if (ConfigController::getConfigBool("RunningOnPI"))
         {
             gpiod_line_set_value(out_line,1);
-            std::this_thread::sleep_for(std::chrono::milliseconds(ConfigController::getConfigInt("RunningOnPi")));
+            std::this_thread::sleep_for(std::chrono::milliseconds(ConfigController::getConfigInt("MockPulseLengthInMS")));
         }
     }
 }
