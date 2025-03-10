@@ -55,7 +55,6 @@ void UsageCollector::launchPulseThread()
         std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
 
         int val = gpiod_line_get_value(in_line);
-        std::cout << "READ: " << val << std::endl;
         if (val == 1 && not pulseActive)
         {
             pulseActive = true;
