@@ -25,7 +25,7 @@ void UsageCollector::launchPulseThread()
 {
     std::string chipPath;
     //chipPath = ConfigController::getConfigString("ChipName");
-    chipPath = "gpiochip4";
+    chipPath = "gpiochip0";
     gpiod_chip *chip = gpiod_chip_open_by_name(chipPath.c_str());
     gpiod_line *out_line = gpiod_chip_get_line(chip, ConfigController::getConfigInt("OutputPinForTest"));
     gpiod_line_set_value(out_line,1);
