@@ -47,7 +47,26 @@ void UsageCollector::launchPulseThread()
         std::cerr << "Failed to request input line\n";
         gpiod_chip_close(chip);
     }
+    std::atomic_bool localKeepRunning = true;
+    std::condition_variable localCV;
+    auto testLambda = [out_line, &localKeepRunning, &localCV] ()-> void
+    {
+        std::mutex mutex;
+        std::unique_lock lock(mutex);
+        while (localKeepRunning)
+        {
+            double targetKWH = ConfigController::getConfigInt("TargetKWHForMockPulse");
+            int waitTime = 3600 / targetKWH;
+            gpiod_line_set_value(out_line,1);
+            localCV.wait_for(lock, std::chrono::milliseconds(waitTime));
+            gpiod_line_set_value(out_line,1);
+            int pulseLength = ConfigController::getConfigInt("MockPulseLengthInMS");
+            std::this_thread::sleep_for(std::chrono::milliseconds(pulseLength));
+        }
+    };
 
+
+    auto thread = std::thread(testLambda);
     bool pulseActive = false;
     while (keepRunning_)
     {
@@ -64,8 +83,10 @@ void UsageCollector::launchPulseThread()
         {
             pulseActive = false;
         }
-
     }
+    localKeepRunning = false;
+    localCV.notify_one();
+    thread_.join();
     gpiod_line_release(out_line);
     gpiod_line_release(in_line);
     gpiod_chip_close(chip);
