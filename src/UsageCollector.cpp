@@ -56,7 +56,7 @@ void UsageCollector::launchPulseThread()
         while (localKeepRunning)
         {
             double targetKWH = ConfigController::getConfigInt("TargetKWHForMockPulse");
-            int waitTime = 3600 / targetKWH;
+            int waitTime = 3600000 / targetKWH;
             gpiod_line_set_value(out_line,1);
             localCV.wait_for(lock, std::chrono::milliseconds(waitTime));
             gpiod_line_set_value(out_line,1);
