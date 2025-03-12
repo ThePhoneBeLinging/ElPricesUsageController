@@ -37,6 +37,23 @@ void UsageCollector::launchPulseThread()
         std::cerr << "Failed to request input line\n";
         gpiod_chip_close(chip);
     }
+    bool pulseActive = false;
+    while (keepRunning_)
+    {
+        int sleepTime = ConfigController::getConfigInt("SleepTimeForPulseLoopInMS");
+        std::this_thread::sleep_for(std::chrono::milliseconds(sleepTime));
+
+        int val = gpiod_line_get_value(in_line);
+        if (val == 1 && not pulseActive)
+        {
+            pulseActive = true;
+            pulseStorage_->storePulse();
+        }
+        else if (val == 0 && pulseActive)
+        {
+            pulseActive = false;
+        }
+    }
 
     gpiod_line_release(in_line);
     gpiod_chip_close(chip);
