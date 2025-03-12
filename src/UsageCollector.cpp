@@ -32,7 +32,6 @@ void UsageCollector::launchPulseThread()
         std::cerr << "Failed to open GPIO chip\n";
     }
 
-    // Set up input line
     gpiod_line *in_line = gpiod_chip_get_line(chip, ConfigController::getConfigInt("InputPin"));
     if (!in_line || gpiod_line_request_input(in_line, "example") < 0) {
         std::cerr << "Failed to request input line\n";
