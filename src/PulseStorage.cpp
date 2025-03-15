@@ -11,10 +11,11 @@
 #include "Utility/DebugController.h"
 #include "Utility/TimeUtil.h"
 
-PulseStorage::PulseStorage() : db_(std::make_unique<SQLite::Database>("../../HistoricData/Pulses.db", SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
+PulseStorage::PulseStorage(const std::function<void(int pulsesCurrentHour, double currentWattage)>& onPulseFunction) : db_(std::make_unique<SQLite::Database>("../../HistoricData/Pulses.db", SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
                                , keepRunning_(true),memoryDB_(std::make_unique<SQLite::Database>(":memory:",SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
                                , lastPing_(std::chrono::high_resolution_clock::now()), wattageLast2Pulses_(0)
 {
+    onPulseFunction_ = onPulseFunction;
     std::cout << "PulseStorage constructor" << std::endl;
     DatabaseAccessController::addDatabase(db_,"PULSEDB");
     DatabaseAccessController::addDatabase(memoryDB_, "MEMORYPULSEDB");
@@ -48,6 +49,7 @@ void PulseStorage::storePulse()
     }
     lastPing_ = std::chrono::high_resolution_clock::now();
     pulsesCurrentHour_ += 1;
+    onPulseFunction_(pulsesCurrentHour_,wattageLast2Pulses_);
 
     int key = DatabaseAccessController::lockDatabase("MEMORYPULSEDB");
     try

@@ -15,7 +15,7 @@
 class PulseStorage
 {
 public:
-    PulseStorage();
+    explicit PulseStorage(const std::function<void(int pulsesCurrentHour, double currentWattage)>& onPulseFunction);
     ~PulseStorage();
     void storePulse();
     int getPulsesLastSeconds(int amountOfSeconds);
@@ -38,6 +38,8 @@ private:
     std::chrono::high_resolution_clock::time_point lastPing_;
     std::atomic<double> wattageLast2Pulses_;
     std::atomic<int> pulsesCurrentHour_;
+
+    std::function<void(int pulsesCurrentHour, double currentWattage)> onPulseFunction_;
 
 };
 

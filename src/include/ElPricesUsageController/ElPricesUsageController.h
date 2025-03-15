@@ -15,7 +15,7 @@
 class ElPricesUsageController
 {
 public:
-    ElPricesUsageController();
+    explicit ElPricesUsageController(const std::function<void(int pulsesCurrentHour, double currentWattage)>& onPulseFunction);
     ~ElPricesUsageController() = default;
     int getAmountOfPulsesBasedOnSeconds(int seconds);
     [[nodiscard]] double getWattage() const;
