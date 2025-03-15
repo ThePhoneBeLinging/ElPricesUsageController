@@ -4,10 +4,6 @@
 
 #include "MockUsageCollector.h"
 #include <random>
-#include <gpiod.h>
-#include <iostream>
-
-#include "Utility/ConfigController.h"
 
 MockUsageCollector::MockUsageCollector(const std::shared_ptr<PulseStorage>& pulseStorage) : pulseStorage_(pulseStorage), keepRunning_(true)
 {
