@@ -5,7 +5,7 @@ set(CMAKE_CXX_STANDARD 20)
 
 find_package(fmt REQUIRED)
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(GPIOD REQUIRED libgpiod)
+pkg_check_modules(GPIOD libgpiod)
 add_library(ElPricesUsageController STATIC
         ElPricesUsageController.cpp
         IUsageCollector.h
