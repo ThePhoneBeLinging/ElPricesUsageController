@@ -5,6 +5,7 @@
 #ifndef PULSESTORAGE_H
 #define PULSESTORAGE_H
 #include <condition_variable>
+#include <functional>
 #include <memory>
 #include <thread>
 
