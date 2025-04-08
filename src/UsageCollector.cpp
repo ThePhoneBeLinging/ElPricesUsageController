@@ -23,6 +23,7 @@ UsageCollector::~UsageCollector()
 
 void UsageCollector::launchPulseThread()
 {
+    std::thread thread;
     std::string chipPath;
     chipPath = ConfigController::getConfigString("ChipName");
 
@@ -37,6 +38,28 @@ void UsageCollector::launchPulseThread()
         std::cerr << "Failed to request input line\n";
         gpiod_chip_close(chip);
     }
+
+    gpiod_line* out_line = gpiod_chip_get_line(chip, ConfigController::getConfigInt("OutputPinForTest"));
+    if (ConfigController::getConfigBool("UseMockPulse"))
+    {
+        if (!in_line || gpiod_line_request_output(out_line, "example",0) < 0) {
+            std::cerr << "Failed to request input line\n";
+            gpiod_chip_close(chip);
+        }
+        thread = std::thread([this, out_line]()
+        {
+            int pulseLength = ConfigController::getConfigInt("MockPulseLengthInMS");
+            int delay = 3600;
+            while (keepRunning_)
+            {
+                std::this_thread::sleep_for(std::chrono::milliseconds(delay));
+                gpiod_line_set_value(out_line,1);
+                std::this_thread::sleep_for(std::chrono::milliseconds(pulseLength));
+                gpiod_line_set_value(out_line,0);
+            }
+        });
+    }
+
     bool pulseActive = false;
     while (keepRunning_)
     {
@@ -54,7 +77,8 @@ void UsageCollector::launchPulseThread()
             pulseActive = false;
         }
     }
-
+    thread.join();
     gpiod_line_release(in_line);
+    gpiod_line_release(out_line);
     gpiod_chip_close(chip);
 }
