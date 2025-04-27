@@ -30,12 +30,12 @@ void UsageCollector::launchPulseThread()
 
     gpiod_chip *chip = gpiod_chip_open_by_name(chipPath.c_str());
     if (!chip) {
-        std::cerr << "Failed to open GPIO chip\n";
+        throw std::runtime_error("Failed to open GPIO chip");
     }
 
     gpiod_line *in_line = gpiod_chip_get_line(chip, ConfigController::getConfigInt("InputPin"));
     if (!in_line || gpiod_line_request_input(in_line, "example") < 0) {
-        std::cerr << "Failed to request input line\n";
+        throw std::runtime_error("Failed to request input line");
         gpiod_chip_close(chip);
     }
 
@@ -43,7 +43,7 @@ void UsageCollector::launchPulseThread()
     if (ConfigController::getConfigBool("UseMockPulse"))
     {
         if (!out_line || gpiod_line_request_output(out_line, "example",0) < 0) {
-            std::cerr << "Failed to request input line\n";
+            throw std::runtime_error("Failed to request output line");
             gpiod_chip_close(chip);
         }
         thread = std::thread([this, out_line]()
