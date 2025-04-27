@@ -49,7 +49,8 @@ void UsageCollector::launchPulseThread()
         thread = std::thread([this, out_line]()
         {
             int pulseLength = ConfigController::getConfigInt("MockPulseLengthInMS");
-            int delay = 3600;
+            int targetKWH = ConfigController::getConfigInt("TargetKWHForMockPulse");
+            int delay = 360000 / targetKWH;
             while (keepRunning_)
             {
                 std::this_thread::sleep_for(std::chrono::milliseconds(delay));
