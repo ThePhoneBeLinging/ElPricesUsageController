@@ -16,13 +16,16 @@
 class PulseStorage
 {
 public:
-    explicit PulseStorage(const std::function<void(int pulsesCurrentHour, double currentWattage)>& onPulseFunction);
+    explicit PulseStorage(
+        const std::function<void(int pulsesCurrentHour, int pulsesLastHour, double currentWattage)>& onPulseFunction);
     ~PulseStorage();
     void storePulse();
     int getPulsesLastSeconds(int amountOfSeconds);
     double getWattage() const;
     int getPulsesLastHour();
     std::vector<std::shared_ptr<UsageDay>> getUsageDays() const;
+    int getPulsesOfAnHour(int year, int month, int day, int hour);
+
 private:
     void keepFileDBUpToDate();
     void memoryFlusherThreadFunction();
@@ -39,11 +42,10 @@ private:
     std::chrono::high_resolution_clock::time_point lastPing_;
     std::atomic<double> wattageLast2Pulses_;
     std::atomic<int> pulsesCurrentHour_;
+    std::atomic<int> pulsesLastHour_;
 
-    std::function<void(int pulsesCurrentHour, double currentWattage)> onPulseFunction_;
-
+    std::function<void(int pulsesCurrentHour, int pulsesLastHour, double currentWattage)> onPulseFunction_;
 };
-
 
 
 #endif //PULSESTORAGE_H

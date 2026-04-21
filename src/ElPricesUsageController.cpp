@@ -8,7 +8,9 @@
 #include "UsageCollector.h"
 #include "Utility/ConfigController.h"
 
-ElPricesUsageController::ElPricesUsageController(const std::function<void(int pulsesCurrentHour, double currentWattage)>& onPulseFunction) : pulseStorage_(std::make_shared<PulseStorage>(onPulseFunction))
+ElPricesUsageController::ElPricesUsageController(
+    const std::function<void(int pulsesCurrentHour, int pulsesLastHour, double currentWattage)>& onPulseFunction) :
+    pulseStorage_(std::make_shared<PulseStorage>(onPulseFunction))
 {
     if (ConfigController::getConfigBool("RunningOnPI"))
     {

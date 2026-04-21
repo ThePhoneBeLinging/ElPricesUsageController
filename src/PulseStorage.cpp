@@ -11,24 +11,28 @@
 #include "Utility/DebugController.h"
 #include "Utility/TimeUtil.h"
 
-PulseStorage::PulseStorage(const std::function<void(int pulsesCurrentHour, double currentWattage)>& onPulseFunction) : db_(std::make_unique<SQLite::Database>("../../HistoricData/Pulses.db", SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
-                               , keepRunning_(true),memoryDB_(std::make_unique<SQLite::Database>(":memory:",SQLite::OPEN_READWRITE|SQLite::OPEN_CREATE))
-                               , lastPing_(std::chrono::high_resolution_clock::now()), wattageLast2Pulses_(0)
+PulseStorage::PulseStorage(
+    const std::function<void(int pulsesCurrentHour, int pulsesLastHour, double currentWattage)>& onPulseFunction) :
+    db_(std::make_unique<
+        SQLite::Database>("../../HistoricData/Pulses.db", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE))
+    , keepRunning_(true),
+    memoryDB_(std::make_unique<SQLite::Database>(":memory:", SQLite::OPEN_READWRITE | SQLite::OPEN_CREATE))
+    , lastPing_(std::chrono::high_resolution_clock::now()), wattageLast2Pulses_(0)
 {
     onPulseFunction_ = onPulseFunction;
     std::cout << "PulseStorage constructor" << std::endl;
-    DatabaseAccessController::addDatabase(db_,"PULSEDB");
+    DatabaseAccessController::addDatabase(db_, "PULSEDB");
     DatabaseAccessController::addDatabase(memoryDB_, "MEMORYPULSEDB");
 
     std::string query = "CREATE TABLE Pulses ("
-    "\"ID\" INTEGER PRIMARY KEY AUTOINCREMENT,"
-    "\"TimeStamp\" DATETIME NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW'))"
-    ")";
+        "\"ID\" INTEGER PRIMARY KEY AUTOINCREMENT,"
+        "\"TimeStamp\" DATETIME NOT NULL DEFAULT (STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW'))"
+        ")";
 
     SQLite::Statement queryStmt(*memoryDB_, query);
     queryStmt.exec();
     memoryFlusherThread_ = std::thread(&PulseStorage::memoryFlusherThreadFunction, this);
-    fileDBWriterThread_ = std::thread(&PulseStorage::keepFileDBUpToDate,this);
+    fileDBWriterThread_ = std::thread(&PulseStorage::keepFileDBUpToDate, this);
 }
 
 PulseStorage::~PulseStorage()
@@ -49,12 +53,12 @@ void PulseStorage::storePulse()
     }
     lastPing_ = std::chrono::high_resolution_clock::now();
     pulsesCurrentHour_ += 1;
-    onPulseFunction_(pulsesCurrentHour_,wattageLast2Pulses_);
+    onPulseFunction_(pulsesCurrentHour_, pulsesLastHour_, wattageLast2Pulses_);
 
     auto memoryPulseDBLock = DatabaseAccessController::getDatabase("MEMORYPULSEDB");
     try
     {
-        SQLite::Statement insertStatement(*memoryPulseDBLock->getDatabase(),"INSERT INTO Pulses DEFAULT VALUES");
+        SQLite::Statement insertStatement(*memoryPulseDBLock->getDatabase(), "INSERT INTO Pulses DEFAULT VALUES");
         insertStatement.exec();
     }
     catch (const std::exception& e)
@@ -68,7 +72,9 @@ int PulseStorage::getPulsesLastSeconds(int amountOfSeconds)
     auto memoryPulseDBLock = DatabaseAccessController::getDatabase("MEMORYPULSEDB");
     try
     {
-        std::string query = "SELECT COUNT(*) FROM Pulses WHERE TimeStamp >= STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', '-' || " + std::to_string(amountOfSeconds) + " || ' seconds')";
+        std::string query =
+            "SELECT COUNT(*) FROM Pulses WHERE TimeStamp >= STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', '-' || " +
+            std::to_string(amountOfSeconds) + " || ' seconds')";
         int result = memoryPulseDBLock->getDatabase()->execAndGet(query).getInt();
         return result;
     }
@@ -98,24 +104,25 @@ std::vector<std::shared_ptr<UsageDay>> PulseStorage::getUsageDays() const
     try
     {
         std::vector<std::shared_ptr<UsageDay>> usageDays;
-        SQLite::Statement selectUsageDays(*pulseDBLock->getDatabase(),"SELECT * FROM PulseDates");
+        SQLite::Statement selectUsageDays(*pulseDBLock->getDatabase(), "SELECT * FROM PulseDates");
         while (selectUsageDays.executeStep())
         {
             int id = selectUsageDays.getColumn(0).getInt();
             int year = selectUsageDays.getColumn(1).getInt();
             int month = selectUsageDays.getColumn(2).getInt();
             int day = selectUsageDays.getColumn(3).getInt();
-            std::string usagedayString = fmt::format("{}-{}-{}",year,month,day);
+            std::string usagedayString = fmt::format("{}-{}-{}", year, month, day);
             auto usageDay = std::make_shared<UsageDay>(usagedayString);
 
-            SQLite::Statement selectPulseHours(*pulseDBLock->getDatabase(),"SELECT * FROM PulseHours WHERE PulseDateID == ?");
-            selectPulseHours.bind(1,id);
+            SQLite::Statement selectPulseHours(*pulseDBLock->getDatabase(),
+                                               "SELECT * FROM PulseHours WHERE PulseDateID == ?");
+            selectPulseHours.bind(1, id);
 
             while (selectPulseHours.executeStep())
             {
                 int hour = selectPulseHours.getColumn(1);
                 int pulses = selectPulseHours.getColumn(2);
-                usageDay->addHour(hour,pulses);
+                usageDay->addHour(hour, pulses);
             }
             usageDays.push_back(usageDay);
         }
@@ -129,6 +136,37 @@ std::vector<std::shared_ptr<UsageDay>> PulseStorage::getUsageDays() const
     return {};
 }
 
+int PulseStorage::getPulsesOfAnHour(int year, int month, int day, int hour)
+{
+    auto pulseDBLock = DatabaseAccessController::getDatabase("PULSEDB");
+    try
+    {
+        SQLite::Statement selectPulseDateID(*pulseDBLock->getDatabase(),
+                                            "SELECT ID FROM PulseDates WHERE Year == ? AND Month == ? AND Day == ?");
+        selectPulseDateID.bind(1, year);
+        selectPulseDateID.bind(2, month);
+        selectPulseDateID.bind(3, day);
+        if (selectPulseDateID.executeStep())
+        {
+            int dateID = selectPulseDateID.getColumn(0).getInt();
+            SQLite::Statement selectPulses(*pulseDBLock->getDatabase(),
+                                           "SELECT Pulses FROM PulseHours WHERE PulseDateID == ? AND Hour == ?");
+            selectPulses.bind(1, dateID);
+            selectPulses.bind(2, hour);
+            if (selectPulses.executeStep())
+            {
+                return selectPulses.getColumn(0).getInt();
+            }
+        }
+    }
+    catch (const std::exception& exception)
+    {
+        std::string debugText = exception.what();
+        DebugController::debugWrite("getPulsesOfAnHour: " + debugText);
+    }
+    return -1;
+}
+
 void PulseStorage::keepFileDBUpToDate()
 {
     std::unique_lock<std::mutex> lock(condVarMutex_);
@@ -137,11 +175,15 @@ void PulseStorage::keepFileDBUpToDate()
     bool firstRun = true;
     while (keepRunning_)
     {
+        auto now = TimeUtil::getCurrentTime();
+        auto lastHour = std::chrono::system_clock::now() - std::chrono::hours(1);
+        auto lastHourTM = TimeUtil::timeToTM(lastHour);
+        pulsesLastHour_ = getPulsesOfAnHour(lastHourTM.tm_year, lastHourTM.tm_mon, lastHourTM.tm_mday,
+                                            lastHourTM.tm_hour);
         if (not firstRun)
         {
-            keepRunningCondition_.wait_for(lock,std::chrono::seconds(TimeUtil::secondsToNextHour()));
+            keepRunningCondition_.wait_for(lock, std::chrono::seconds(TimeUtil::secondsToNextHour()));
         }
-        auto now = TimeUtil::getCurrentTime();
         if (lastSavedHour == now.tm_hour)
         {
             std::this_thread::sleep_for(std::chrono::milliseconds(500));
@@ -149,30 +191,34 @@ void PulseStorage::keepFileDBUpToDate()
         auto pulseDBLock = DatabaseAccessController::getDatabase("PULSEDB");
         if (lastSavedHour == 23 || lastSavedHour == -1)
         {
-            SQLite::Statement insertDate(*pulseDBLock->getDatabase(),"INSERT OR IGNORE INTO PulseDates(Year,Month,Day) VALUES(?,?,?)");
-            insertDate.bind(1,now.tm_year);
-            insertDate.bind(2,now.tm_mon);
-            insertDate.bind(3,now.tm_mday);
+            SQLite::Statement insertDate(*pulseDBLock->getDatabase(),
+                                         "INSERT OR IGNORE INTO PulseDates(Year,Month,Day) VALUES(?,?,?)");
+            insertDate.bind(1, now.tm_year);
+            insertDate.bind(2, now.tm_mon);
+            insertDate.bind(3, now.tm_mday);
             insertDate.exec();
 
-            SQLite::Statement selectJustInserted(*pulseDBLock->getDatabase(),"SELECT ID FROM PulseDates WHERE Year==? AND Month==? AND Day==?");
-            selectJustInserted.bind(1,now.tm_year);
-            selectJustInserted.bind(2,now.tm_mon);
-            selectJustInserted.bind(3,now.tm_mday);
+            SQLite::Statement selectJustInserted(*pulseDBLock->getDatabase(),
+                                                 "SELECT ID FROM PulseDates WHERE Year==? AND Month==? AND Day==?");
+            selectJustInserted.bind(1, now.tm_year);
+            selectJustInserted.bind(2, now.tm_mon);
+            selectJustInserted.bind(3, now.tm_mday);
             selectJustInserted.executeStep();
             idToSaveHourUnder = selectJustInserted.getColumn(0).getInt();
         }
 
         try
         {
-            SQLite::Statement createHourLine(*pulseDBLock->getDatabase(),"INSERT OR IGNORE INTO PulseHours(PulseDateID,Hour,Pulses) VALUES(?,?,?)");
-            createHourLine.bind(1,idToSaveHourUnder);
-            createHourLine.bind(2,now.tm_hour);
-            createHourLine.bind(3,0);
+            SQLite::Statement createHourLine(*pulseDBLock->getDatabase(),
+                                             "INSERT OR IGNORE INTO PulseHours(PulseDateID,Hour,Pulses) VALUES(?,?,?)");
+            createHourLine.bind(1, idToSaveHourUnder);
+            createHourLine.bind(2, now.tm_hour);
+            createHourLine.bind(3, 0);
             createHourLine.exec();
-            SQLite::Statement selectStatement(*pulseDBLock->getDatabase(),"SELECT Pulses FROM PulseHours WHERE PulseDateID == ? AND Hour == ?");
-            selectStatement.bind(1,idToSaveHourUnder);
-            selectStatement.bind(2,now.tm_hour);
+            SQLite::Statement selectStatement(*pulseDBLock->getDatabase(),
+                                              "SELECT Pulses FROM PulseHours WHERE PulseDateID == ? AND Hour == ?");
+            selectStatement.bind(1, idToSaveHourUnder);
+            selectStatement.bind(2, now.tm_hour);
 
             while (selectStatement.executeStep())
             {
@@ -185,10 +231,11 @@ void PulseStorage::keepFileDBUpToDate()
                 {
                     pulsesCurrentHour_ += pulses;
                 }
-                SQLite::Statement updatePulsesCurrentHourStatement(*pulseDBLock->getDatabase(),"UPDATE PulseHours SET Pulses = ? WHERE PulseDateID == ? AND Hour == ?");
-                updatePulsesCurrentHourStatement.bind(1,pulsesCurrentHour_);
-                updatePulsesCurrentHourStatement.bind(2,idToSaveHourUnder);
-                updatePulsesCurrentHourStatement.bind(3,now.tm_hour);
+                SQLite::Statement updatePulsesCurrentHourStatement(*pulseDBLock->getDatabase(),
+                                                                   "UPDATE PulseHours SET Pulses = ? WHERE PulseDateID == ? AND Hour == ?");
+                updatePulsesCurrentHourStatement.bind(1, pulsesCurrentHour_);
+                updatePulsesCurrentHourStatement.bind(2, idToSaveHourUnder);
+                updatePulsesCurrentHourStatement.bind(3, now.tm_hour);
                 updatePulsesCurrentHourStatement.exec();
             }
             if (not firstRun)
@@ -212,7 +259,7 @@ void PulseStorage::memoryFlusherThreadFunction()
     while (keepRunning_)
     {
         int secondsToWait = ConfigController::getConfigInt("ElPricesUsageControllerSecondsDumpDelay");
-        keepRunningCondition_.wait_for(lock,std::chrono::seconds(secondsToWait));
+        keepRunningCondition_.wait_for(lock, std::chrono::seconds(secondsToWait));
         cleanUpMemoryPulseDB();
     }
 }
@@ -223,7 +270,8 @@ void PulseStorage::cleanUpMemoryPulseDB()
     int amountOfSecondsToKeepInMemory = ConfigController::getConfigInt("ElPricesUsageControllerSecondsToKeepInMemory");
     try
     {
-        std::string query = "SELECT * FROM Pulses WHERE TimeStamp < STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', '-' || " + std::to_string(amountOfSecondsToKeepInMemory) + " || ' seconds')";
+        std::string query = "SELECT * FROM Pulses WHERE TimeStamp < STRFTIME('%Y-%m-%d %H:%M:%f', 'NOW', '-' || " +
+            std::to_string(amountOfSecondsToKeepInMemory) + " || ' seconds')";
         SQLite::Statement queryStmt(*memoryPulseDBLock->getDatabase(), query);
         int pulses = 0;
         while (queryStmt.executeStep())
