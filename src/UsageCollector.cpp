@@ -27,7 +27,6 @@ void UsageCollector::launchPulseThread()
     std::string chipPath;
     chipPath = ConfigController::getConfigString("ChipName");
 
-    /*
         gpiod_chip *chip = gpiod_chip_open_by_name(chipPath.c_str());
         if (!chip) {
             throw std::runtime_error("Failed to open GPIO chip");
@@ -82,5 +81,4 @@ void UsageCollector::launchPulseThread()
         gpiod_line_release(in_line);
         gpiod_line_release(out_line);
         gpiod_chip_close(chip);
-        */
 }
